@@ -10,8 +10,10 @@ def _assign_to_obj(obj, **kwargs):
 class SimpleManagerMetaclass(type):
     def __new__(cls, name, bases, attrs, method=None, method_args=(), method_kwargs={}):
         if method is not None:
+            if isinstance(method, str):
+                method = attrgetter(method)
             def get_queryset(self, *args, **kwargs):
-                return getattr(super(newcls, self).get_queryset(*args, **kwargs), method)(*(getattr(self, v) for v in method_args), **{k: getattr(self, v) for k, v in method_kwargs.items()})
+                return method(super(newcls, self).get_queryset(*args, **kwargs))(*(getattr(self, v) for v in method_args), **{k: getattr(self, v) for k, v in method_kwargs.items()})
             get_queryset.__qualname__ = f'{name}.get_queryset'
             attrs['get_queryset'] = get_queryset
         newcls = super().__new__(cls, name, bases, attrs)
